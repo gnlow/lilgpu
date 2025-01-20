@@ -6,11 +6,14 @@ import tgpu, {
     Uniform,
 } from "https://esm.sh/typegpu@0.3.2"
 
-type AnyData = Parameters<TgpuRoot["createBuffer"]>[0]
-type Layout = Record<string, TgpuLayoutEntry | null>
+export { DenoGpuWrapper } from "./src/DenoGpuWrapper.ts"
 
-interface GpuWrapperInfo<T extends Layout> {
-    $canvas: HTMLCanvasElement,
+export type AnyData = Parameters<TgpuRoot["createBuffer"]>[0]
+export type Layout = Record<string, TgpuLayoutEntry | null>
+
+export interface GpuWrapperInfo<T extends Layout> {
+    texture: GPUTexture,
+    format?: GPUTextureFormat,
     vertShader: string,
     fragShader: string,
     layout?: T,
@@ -18,8 +21,8 @@ interface GpuWrapperInfo<T extends Layout> {
 
 export class GpuWrapper<T extends Layout> {
     root
-    ctx
-    format = navigator.gpu.getPreferredCanvasFormat()
+    texture
+    format
     pipeline
     bindGroup
     buffers
@@ -27,23 +30,18 @@ export class GpuWrapper<T extends Layout> {
     constructor(
         root: TgpuRoot,
         {
-            $canvas,
+            texture,
+            format,
             vertShader,
             fragShader,
             layout,
         }: GpuWrapperInfo<T>,
     ) {
         this.root = root
-        this.ctx = $canvas.getContext("webgpu") as unknown as GPUCanvasContext
+        this.texture = texture
+        this.format = format || navigator.gpu.getPreferredCanvasFormat()
 
         const device = this.root.device
-        const format = this.format
-        
-        this.ctx.configure({
-            device,
-            format,
-            alphaMode: "premultiplied",
-        })
 
         this.buffers = {} as {
             [K in keyof T]: T[K] extends { uniform: infer D }
@@ -88,15 +86,15 @@ export class GpuWrapper<T extends Layout> {
                         },
                     }),
                 }),
-                targets: [{ format }],
+                targets: [{ format: this.format }],
             },
             primitive: {
                 topology: "triangle-strip",
             }
         })
     }
-    draw() {
-        const textureView = this.ctx.getCurrentTexture().createView()
+    draw(...params: Parameters<GPURenderPassEncoder["draw"]>) {
+        const textureView = this.texture.createView()
         const renderPassDescriptor: GPURenderPassDescriptor = {
             colorAttachments: [
                 {
@@ -112,7 +110,7 @@ export class GpuWrapper<T extends Layout> {
         const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor)
         passEncoder.setPipeline(this.pipeline)
         passEncoder.setBindGroup(0, this.root.unwrap(this.bindGroup))
-        passEncoder.draw(4)
+        passEncoder.draw(...params)
         passEncoder.end()
 
         this.root.device.queue.submit([commandEncoder.finish()])
