@@ -91,6 +91,7 @@ export class GpuWrapper<T extends Layout> {
             }
         })
     }
+    beforeDrawFinish(commandEncoder: GPUCommandEncoder) {}
     draw(...params: Parameters<GPURenderPassEncoder["draw"]>) {
         const textureView = this.texture.createView()
         const renderPassDescriptor: GPURenderPassDescriptor = {
@@ -110,6 +111,8 @@ export class GpuWrapper<T extends Layout> {
         passEncoder.setBindGroup(0, this.root.unwrap(this.bindGroup))
         passEncoder.draw(...params)
         passEncoder.end()
+
+        this.beforeDrawFinish(commandEncoder)
 
         this.root.device.queue.submit([commandEncoder.finish()])
     }

@@ -21,34 +21,13 @@ export class DenoGpuWrapper<T extends Layout> extends GpuWrapper<T> {
         this.outputBuffer = outputBuffer
     }
 
-    override draw(...params: Parameters<GPURenderPassEncoder["draw"]>) {
-        const textureView = this.texture.createView()
-        const renderPassDescriptor: GPURenderPassDescriptor = {
-            colorAttachments: [
-                {
-                    view: textureView,
-                    clearValue: [0, 1, 0, 1],
-                    loadOp: "clear",
-                    storeOp: "store",
-                }
-            ]
-        }
-
-        const commandEncoder = this.root.device.createCommandEncoder()
-        const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor)
-        passEncoder.setPipeline(this.pipeline)
-        passEncoder.setBindGroup(0, this.root.unwrap(this.bindGroup))
-        passEncoder.draw(...params)
-        passEncoder.end()
-
+    override beforeDrawFinish(commandEncoder: GPUCommandEncoder) {
         copyToBuffer(
             commandEncoder,
             this.texture,
             this.outputBuffer,
             { width: 300, height: 300 },
         )
-
-        this.root.device.queue.submit([commandEncoder.finish()])
     }
 
     static override async init<T extends Layout>(info: Omit<GpuWrapperInfo<T>, "texture">) {
