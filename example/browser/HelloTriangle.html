@@ -24,8 +24,7 @@
     <h1>lilgpu: HelloTriangle</h1>
     <canvas width="1280" height="720"></canvas>
     <script type="module">
-        import { initCanvas } from "../../src/GpuWrapper.ts"
-        import * as d from "https://esm.sh/typegpu@0.3.2/data"
+        import { initCanvas, d } from "../../browser.ts"
 
         const g = await initCanvas({
             vertShader: `

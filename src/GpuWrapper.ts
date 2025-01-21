@@ -118,13 +118,6 @@ export class GpuWrapper<T extends Layout> {
     }
 }
 
-export async function init<T extends Layout>(info: GpuWrapperInfo<T>) {
-    return new GpuWrapper(
-        await tgpu.init(),
-        info,
-    )
-}
-
 export async function initCanvas<T extends Layout>
 (info: Omit<GpuWrapperInfo<T>, "texture"> & { canvas: HTMLCanvasElement }) {
     const root = await tgpu.init()
