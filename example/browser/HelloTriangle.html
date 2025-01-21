@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 20px;
+        }
+        canvas {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>lilgpu: HelloTriangle</h1>
+    <canvas width="1280" height="720"></canvas>
+    <script type="module">
+        import { initCanvas } from "../../src/GpuWrapper.ts"
+        import * as d from "https://esm.sh/typegpu@0.3.2/data"
+
+        const g = await initCanvas({
+            vertShader: `
+                @vertex
+                fn vs_main(@builtin(vertex_index) in_vertex_index: u32) -> @builtin(position) vec4<f32> {
+                    let x = f32(i32(in_vertex_index) - 1);
+                    let y = f32(i32(in_vertex_index & 1u) * 2 - 1);
+                    return vec4<f32>(x, y, 0.0, 1.0);
+                }
+            `,
+            fragShader: `
+                @fragment
+                fn fs_main() -> @location(0) vec4<f32> {
+                    return vec4<f32>(1.0, 0.0, 0.0, 1.0);
+                }
+            `,
+            canvas: document.querySelector("canvas"),
+        })
+        g.draw(3)
+    </script>
+</body>
+</html>
