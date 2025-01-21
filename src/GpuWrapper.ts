@@ -124,3 +124,23 @@ export async function init<T extends Layout>(info: GpuWrapperInfo<T>) {
         info,
     )
 }
+
+export async function initCanvas<T extends Layout>
+(info: Omit<GpuWrapperInfo<T>, "texture"> & { canvas: HTMLCanvasElement }) {
+    const root = await tgpu.init()
+    const ctx = info.canvas.getContext("webgpu") as unknown as GPUCanvasContext
+
+    ctx.configure({
+        device: root.device,
+        format: info.format || navigator.gpu.getPreferredCanvasFormat(),
+        alphaMode: "premultiplied",
+    })
+
+    return new GpuWrapper(
+        root,
+        {
+            ...info,
+            texture: ctx.getCurrentTexture(),
+        },
+    )
+}
