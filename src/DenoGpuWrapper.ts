@@ -11,14 +11,19 @@ import { copyToBuffer, createPng } from "./denoUtil.ts"
 
 export class DenoGpuWrapper<T extends Layout> extends GpuWrapper<T> {
     outputBuffer
+    dimension
 
     constructor(
         root: TgpuRoot,
-        info: GpuWrapperInfo<T>,
+        info: GpuWrapperInfo<T> & { width: number, height: number },
         outputBuffer: GPUBuffer,
     ) {
         super(root, info)
         this.outputBuffer = outputBuffer
+        this.dimension = {
+            width: info.width,
+            height: info.height,
+        }
     }
 
     override beforeDrawFinish(commandEncoder: GPUCommandEncoder) {
@@ -26,31 +31,33 @@ export class DenoGpuWrapper<T extends Layout> extends GpuWrapper<T> {
             commandEncoder,
             this.texture,
             this.outputBuffer,
-            { width: 300, height: 300 },
+            this.dimension,
         )
-    }
-
-    static override async init<T extends Layout>(info: Omit<GpuWrapperInfo<T>, "texture">) {
-        const root = await tgpu.init()
-        const { texture, outputBuffer } = createCapture(
-            root.device,
-            300,
-            300,
-        )
-        const out = new DenoGpuWrapper(
-            root,
-            {
-                ...info,
-                texture,
-                format: "rgba8unorm-srgb",
-            },
-            outputBuffer,
-        )
-        return out
     }
     async getImage() {
-        return await createPng(this.outputBuffer, {
-            width: 300, height: 300,
-        })
+        return await createPng(
+            this.outputBuffer,
+            this.dimension,
+        )
     }
+}
+
+export async function initDeno<T extends Layout>
+(info: Omit<GpuWrapperInfo<T>, "texture"> & { width: number, height: number }) {
+    const root = await tgpu.init()
+    const { texture, outputBuffer } = createCapture(
+        root.device,
+        info.width,
+        info.height,
+    )
+    const out = new DenoGpuWrapper(
+        root,
+        {
+            ...info,
+            texture,
+            format: "rgba8unorm-srgb",
+        },
+        outputBuffer,
+    )
+    return out
 }

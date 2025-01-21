@@ -116,11 +116,11 @@ export class GpuWrapper<T extends Layout> {
 
         this.root.device.queue.submit([commandEncoder.finish()])
     }
-    
-    static async init<T extends Layout>(info: GpuWrapperInfo<T>) {
-        return new GpuWrapper(
-            await tgpu.init(),
-            info,
-        )
-    }
+}
+
+export async function init<T extends Layout>(info: GpuWrapperInfo<T>) {
+    return new GpuWrapper(
+        await tgpu.init(),
+        info,
+    )
 }
