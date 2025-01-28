@@ -133,7 +133,7 @@ export async function initCanvas<T extends Layout>
         root,
         {
             ...info,
-            getTexture: ctx.getCurrentTexture,
+            getTexture: () => ctx.getCurrentTexture(),
         },
     )
 }
