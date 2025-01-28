@@ -1,8 +1,9 @@
 import {
     GpuWrapper,
     GpuWrapperInfo,
-    Layout, 
-} from "../mod.ts"
+} from "./GpuWrapper.ts"
+
+import { Layout } from "./types.ts"
 
 import tgpu, { TgpuRoot } from "https://esm.sh/typegpu@0.3.2"
 
@@ -29,7 +30,7 @@ export class DenoGpuWrapper<T extends Layout> extends GpuWrapper<T> {
     override beforeDrawFinish(commandEncoder: GPUCommandEncoder) {
         copyToBuffer(
             commandEncoder,
-            this.texture,
+            this.getTexture(),
             this.outputBuffer,
             this.dimension,
         )
@@ -54,7 +55,7 @@ export async function initDeno<T extends Layout>
         root,
         {
             ...info,
-            texture,
+            getTexture: () => texture,
             format: "rgba8unorm-srgb",
         },
         outputBuffer,

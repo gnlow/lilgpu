@@ -10,7 +10,7 @@ import {
 } from "./types.ts"
 
 export interface GpuWrapperInfo<T extends Layout> {
-    texture: GPUTexture,
+    getTexture(): GPUTexture,
     format?: GPUTextureFormat,
     vertShader: string,
     fragShader: string,
@@ -19,7 +19,7 @@ export interface GpuWrapperInfo<T extends Layout> {
 
 export class GpuWrapper<T extends Layout> {
     root
-    texture
+    getTexture
     format
     pipeline
     bindGroup
@@ -28,7 +28,7 @@ export class GpuWrapper<T extends Layout> {
     constructor(
         root: TgpuRoot,
         {
-            texture,
+            getTexture,
             format,
             vertShader,
             fragShader,
@@ -36,7 +36,7 @@ export class GpuWrapper<T extends Layout> {
         }: GpuWrapperInfo<T>,
     ) {
         this.root = root
-        this.texture = texture
+        this.getTexture = getTexture
         this.format = format || navigator.gpu.getPreferredCanvasFormat()
 
         const device = this.root.device
@@ -93,7 +93,7 @@ export class GpuWrapper<T extends Layout> {
     }
     beforeDrawFinish(commandEncoder: GPUCommandEncoder) {}
     draw(...params: Parameters<GPURenderPassEncoder["draw"]>) {
-        const textureView = this.texture.createView()
+        const textureView = this.getTexture().createView()
         const renderPassDescriptor: GPURenderPassDescriptor = {
             colorAttachments: [
                 {
@@ -133,7 +133,7 @@ export async function initCanvas<T extends Layout>
         root,
         {
             ...info,
-            texture: ctx.getCurrentTexture(),
+            getTexture: ctx.getCurrentTexture,
         },
     )
 }
