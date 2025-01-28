@@ -44,7 +44,7 @@ export class DenoGpuWrapper<T extends Layout> extends GpuWrapper<T> {
 }
 
 export async function initDeno<T extends Layout>
-(info: Omit<GpuWrapperInfo<T>, "texture"> & { width: number, height: number }) {
+(info: Omit<GpuWrapperInfo<T>, "getTexture"> & { width: number, height: number }) {
     const root = await tgpu.init()
     const { texture, outputBuffer } = createCapture(
         root.device,

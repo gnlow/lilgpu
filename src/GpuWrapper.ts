@@ -119,7 +119,7 @@ export class GpuWrapper<T extends Layout> {
 }
 
 export async function initCanvas<T extends Layout>
-(info: Omit<GpuWrapperInfo<T>, "texture"> & { canvas: HTMLCanvasElement }) {
+(info: Omit<GpuWrapperInfo<T>, "getTexture"> & { canvas: HTMLCanvasElement }) {
     const root = await tgpu.init()
     const ctx = info.canvas.getContext("webgpu") as unknown as GPUCanvasContext
 
