@@ -2,6 +2,7 @@ import {
     tgpu,
     TgpuRoot,
     type Uniform,
+    isWgslData,
 } from "./deps.ts"
 
 import {
@@ -52,6 +53,13 @@ export class GpuWrapper<T extends Layout> {
                     (this.buffers[k] as unknown) =
                         root.createBuffer(v.uniform)
                             .$usage("uniform")
+                } else if ("storage" in v!) {
+                    if (!isWgslData(v.storage)) {
+                        throw new Error("lilgpu: Runtime-sized buffer is not yet supported")
+                    }
+                    (this.buffers[k] as unknown) =
+                        root.createBuffer(v.storage)
+                            .$usage("storage")
                 }
             })
 
