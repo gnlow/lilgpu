@@ -61,3 +61,29 @@ await Deno.writeFile("./triangle.png", await g.getImage())
 ```ts
 await g.getImage() // Uint8Array
 ```
+
+
+##
+
+```ts
+class App extends Lil {
+    vertShader = ""
+    fragShader = ""
+
+    @uniform(d.f32) SEED = 0
+    @uniform(d.f32) POW = 1.1
+}
+
+const app = new App()
+
+const g1 = await app.initCanvas(
+    document.querySelector("canvas")
+)
+
+app.seed = 2
+
+const g2 = await app.initDeno({
+    width: 200,
+    height: 200,
+})
+```
