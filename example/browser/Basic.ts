@@ -57,6 +57,4 @@ class Basic extends Lil {
 const basic = new Basic()
 const g = await basic.initCanvas(document.querySelector("canvas")!)
 
-basic.span = { x: 10, y: 20 }
-basic.blue = 0.5
 g.draw(4)

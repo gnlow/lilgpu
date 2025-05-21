@@ -73,6 +73,10 @@ export abstract class Lil {
         this.onUpdate((name, value) => {
             (wrapper.buffers as any)[name].write(value)
         })
+        Object.keys(this.layout).forEach(name => {
+            const value = this[name as keyof Lil]
+            ;(wrapper.buffers as any)[name].write(value)
+        })
 
         const that = this as Record<string, any>
 
