@@ -36,7 +36,7 @@ fn main(
     return vec4(red, green, blue, 1.0);
 }
 `
-import { initCanvas, d } from "../../browser.ts"
+import { d } from "../../browser.ts"
 
 import { Lil, uniform } from "../../src/Lil.ts"
 
