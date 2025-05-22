@@ -1,6 +1,5 @@
-import { Layout } from "./types.ts"
-import { AnyWgslData } from "./deps.ts"
-import { initCanvas } from "./GpuWrapper.ts";
+import { AnyWgslData, TgpuLayoutEntry } from "./deps.ts"
+import { initCanvas } from "./GpuWrapper.ts"
 
 const accessorDecorator =
 <
@@ -30,38 +29,52 @@ const accessorDecorator =
             f(this)(...args).init?.(value, ctx)
             return value
         },
-    }
+    } as ClassAccessorDecoratorResult<This, Return>
 }
 
 export const uniform = 
-<T extends AnyWgslData, C extends Lil>
+<T extends AnyWgslData, This extends Lil>
 (type: T) =>
 accessorDecorator(
-    (lil: C) =>
+    (lil: This) =>
     (type: T) => ({
         getV: (v: T["~repr"]) => v,
         setV: (v, { name }) => {
-            lil.update(name as any, v as any)
+            lil.update(
+                name as This["__t_keys"],
+                v as This[This["__t_keys"]],
+            )
         },
-        init: (v, { name }) => {
-            lil.layout[name as string] = { uniform: type }
+        init: (_, { name }) => {
+            lil.layout[name as This["__t_keys"]] = { uniform: type }
         },
     })
 )(type)
 
-type UpdateListener<Class> = <T extends keyof Class>(name: T, value: Class[T]) => void
+const keys =
+<T extends object>(obj: T) =>
+    Object.keys(obj) as (keyof T)[]
 
 export abstract class Lil {
     abstract vertShader: string
     abstract fragShader: string
-    layout: Layout = {}
 
-    updateListeners: UpdateListener<this>[] = []
-    onUpdate(f: UpdateListener<this>) {
+    /**
+     * Type variable
+     */
+    __t_keys = "" as keyof Omit<this, keyof Lil>
+
+    layout = {} as Record<this["__t_keys"], TgpuLayoutEntry>
+
+    updateListeners: (
+        <K extends this["__t_keys"]>
+        (name: K, value: this[K]) => void
+    )[] = []
+    onUpdate(f: typeof this.updateListeners[0]) {
         this.updateListeners.push(f)
     }
 
-    update<T extends keyof this>(name: T, value: this[T]) {
+    update(name: this["__t_keys"], value: this[typeof name]) {
         this.updateListeners.forEach(f => f(name, value))
     }
 
@@ -71,26 +84,13 @@ export abstract class Lil {
             canvas,
         })
         this.onUpdate((name, value) => {
-            (wrapper.buffers as any)[name].write(value)
+            wrapper.buffers[name].write(value)
         })
-        Object.keys(this.layout).forEach(name => {
-            const value = this[name as keyof Lil]
-            ;(wrapper.buffers as any)[name].write(value)
+        keys(this.layout).forEach(name => {
+            const value = this[name]
+            wrapper.buffers[name].write(value)
         })
 
-        const that = this as Record<string, any>
-
-        return new Proxy(wrapper, {
-            get(obj, prop) {
-                return prop in obj
-                    ? Reflect.get(obj, prop)
-                    : that[prop as string]
-            },
-            set(obj, prop, newValue) {
-                return prop in obj
-                    ? Reflect.set(obj, prop, newValue)
-                    : !!(that[prop as string] = newValue)
-            }
-        })
+        return wrapper
     }
 }
