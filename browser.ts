@@ -1,4 +1,18 @@
-export * as d from "https://esm.sh/typegpu@0.5.3/data"
-export * from "./src/types.ts"
+export * from "./common.ts"
 
 export * from "./src/GpuWrapper.ts"
+
+import { Lil as Lil_ } from "./src/Lil.ts"
+import { initCanvas } from "./src/GpuWrapper.ts"
+
+export abstract class Lil extends Lil_ {
+    async init(canvas: HTMLCanvasElement) {
+        const wrapper = await initCanvas({
+            ...this,
+            canvas,
+        })
+        this.initWrapper(wrapper)
+
+        return wrapper
+    }
+}

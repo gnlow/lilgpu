@@ -36,9 +36,7 @@ fn main(
     return vec4(red, green, blue, 1.0);
 }
 `
-import { d } from "../../browser.ts"
-
-import { Lil, uniform } from "../../src/Lil.ts"
+import { d, Lil, uniform } from "../../browser.ts"
 
 class Basic extends Lil {
     vertShader = vertShader
@@ -55,7 +53,7 @@ class Basic extends Lil {
 }
 
 const basic = new Basic()
-const g = await basic.initCanvas(document.querySelector("canvas")!)
+const g = await basic.init(document.querySelector("canvas")!)
 
 g.draw(4)
 

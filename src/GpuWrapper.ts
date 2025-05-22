@@ -99,7 +99,7 @@ export class GpuWrapper<T extends Layout> {
             }
         })
     }
-    beforeDrawFinish(commandEncoder: GPUCommandEncoder) {}
+    beforeDrawFinish(_commandEncoder: GPUCommandEncoder) {}
     draw(...params: Parameters<GPURenderPassEncoder["draw"]>) {
         const textureView = this.getTexture().createView()
         const renderPassDescriptor: GPURenderPassDescriptor = {

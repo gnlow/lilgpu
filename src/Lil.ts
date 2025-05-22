@@ -1,5 +1,5 @@
 import { AnyWgslData, TgpuLayoutEntry } from "./deps.ts"
-import { initCanvas } from "./GpuWrapper.ts"
+import { GpuWrapper } from "./GpuWrapper.ts"
 
 const accessorDecorator =
 <
@@ -79,11 +79,7 @@ export abstract class Lil {
         this.updateListeners.forEach(f => f(name, value))
     }
 
-    async initCanvas(canvas: HTMLCanvasElement) {
-        const wrapper = await initCanvas({
-            ...this,
-            canvas,
-        })
+    initWrapper(wrapper: GpuWrapper<this["layout"]>) {
         this.onUpdate((name, value) => {
             wrapper.buffers[name].write(value)
         })
@@ -91,7 +87,5 @@ export abstract class Lil {
             const value = this[name]
             wrapper.buffers[name].write(value)
         })
-
-        return wrapper
     }
 }
