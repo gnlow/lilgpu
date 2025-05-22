@@ -6,7 +6,7 @@ const accessorDecorator =
     Args extends unknown[],
     This,
     Return,
-    _Ctx = ClassAccessorDecoratorContext<This, Return>
+    _Ctx extends ClassAccessorDecoratorContext<This, Return>,
 >
 (f: (that: This) => (...args: Args) => {
     getV(v: Return, ctx: _Ctx): Return,
@@ -44,6 +44,7 @@ accessorDecorator(
                 name as This["__t_keys"],
                 v as This[This["__t_keys"]],
             )
+            return v
         },
         init: (_, { name }) => {
             lil.layout[name as This["__t_keys"]] = { uniform: type }

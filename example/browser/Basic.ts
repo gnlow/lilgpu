@@ -58,3 +58,11 @@ const basic = new Basic()
 const g = await basic.initCanvas(document.querySelector("canvas")!)
 
 g.draw(4)
+
+const tick = () => new Promise(requestAnimationFrame)
+
+while (true) {
+    await tick()
+    basic.blue = Math.sin(Date.now()/1000)/2+0.5
+    g.draw(4)
+}
