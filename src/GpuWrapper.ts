@@ -1,7 +1,7 @@
 import {
     tgpu,
     TgpuRoot,
-    type Uniform,
+    UniformFlag,
     isWgslData,
 } from "./deps.ts"
 
@@ -44,7 +44,7 @@ export class GpuWrapper<T extends Layout> {
 
         this.buffers = {} as {
             [K in keyof T]: T[K] extends { uniform: infer D }
-                ? ReturnType<typeof root.createBuffer<D extends AnyData ? D : never>> & Uniform
+                ? ReturnType<typeof root.createBuffer<D extends AnyData ? D : never>> & UniformFlag
                 : never
         }
         Object.entries(layout || {})
@@ -99,7 +99,7 @@ export class GpuWrapper<T extends Layout> {
             }
         })
     }
-    beforeDrawFinish(commandEncoder: GPUCommandEncoder) {}
+    beforeDrawFinish(_commandEncoder: GPUCommandEncoder) {}
     draw(...params: Parameters<GPURenderPassEncoder["draw"]>) {
         const textureView = this.getTexture().createView()
         const renderPassDescriptor: GPURenderPassDescriptor = {
