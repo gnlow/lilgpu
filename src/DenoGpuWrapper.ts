@@ -5,7 +5,7 @@ import {
 
 import { Layout } from "./types.ts"
 
-import tgpu, { TgpuRoot } from "https://esm.sh/typegpu@0.5.3"
+import tgpu, { TgpuRoot } from "https://esm.sh/typegpu@0.5.7?bundle=false"
 
 import { createCapture } from "jsr:@std/webgpu@0.224.7"
 import { copyToBuffer, createPng } from "./denoUtil.ts"

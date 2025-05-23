@@ -1,5 +1,6 @@
 import {
     AnyWgslData,
+    Infer,
     TgpuLayoutEntry,
     TgpuLayoutStorage,
 } from "./deps.ts"
@@ -42,7 +43,7 @@ const layoutDecorator =
 accessorDecorator(
     (lil: This) =>
     (...args: Args) => ({
-        getV: (v: T["~repr"]) => v,
+        getV: (v: Infer<T>) => v,
         setV: (v, { name }) => {
             lil.update(
                 name as This["__t_keys"],
