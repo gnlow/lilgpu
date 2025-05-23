@@ -32,12 +32,12 @@ const accessorDecorator =
     } as ClassAccessorDecoratorResult<This, Return>
 }
 
-export const uniform = 
-<T extends AnyWgslData, This extends Lil>
-(type: T) =>
+const layoutDecorator = 
+<Args extends any[], T extends AnyWgslData, This extends Lil>
+(f: (...args: Args) => TgpuLayoutEntry) =>
 accessorDecorator(
     (lil: This) =>
-    (type: T) => ({
+    (...args: Args) => ({
         getV: (v: T["~repr"]) => v,
         setV: (v, { name }) => {
             lil.update(
@@ -47,9 +47,16 @@ accessorDecorator(
             return v
         },
         init: (_, { name }) => {
-            lil.layout[name as This["__t_keys"]] = { uniform: type }
+            lil.layout[name as This["__t_keys"]] = f(...args)
         },
     })
+)
+
+export const uniform =
+<T extends AnyWgslData, This extends Lil>
+(type: T) =>
+layoutDecorator<[T], T, This>(
+    (type: T) => ({ uniform: type })
 )(type)
 
 const keys =
