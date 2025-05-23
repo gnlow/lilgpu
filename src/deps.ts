@@ -4,6 +4,6 @@ export {
     type TgpuLayoutEntry,
     type TgpuLayoutStorage,
     type UniformFlag,
-} from "https://esm.sh/typegpu@0.5.3"
+} from "https://esm.sh/typegpu@0.5.7?bundle=false"
 
-export * from "https://esm.sh/typegpu@0.5.3/data"
+export * from "https://esm.sh/typegpu@0.5.7/data?bundle=false"
