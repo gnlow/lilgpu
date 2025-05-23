@@ -1,4 +1,8 @@
-import { AnyWgslData, TgpuLayoutEntry } from "./deps.ts"
+import {
+    AnyWgslData,
+    TgpuLayoutEntry,
+    TgpuLayoutStorage,
+} from "./deps.ts"
 import { GpuWrapper } from "./GpuWrapper.ts"
 
 const accessorDecorator =
@@ -56,8 +60,15 @@ export const uniform =
 <T extends AnyWgslData, This extends Lil>
 (type: T) =>
 layoutDecorator<[T], T, This>(
-    (type: T) => ({ uniform: type })
+    type => ({ uniform: type })
 )(type)
+
+export const storage =
+<T extends AnyWgslData, This extends Lil>
+(type: T, access: TgpuLayoutStorage["access"]) =>
+layoutDecorator<[T, typeof access], T, This>(
+    (type, access) => ({ storage: type, access })
+)(type, access)
 
 const keys =
 <T extends object>(obj: T) =>
