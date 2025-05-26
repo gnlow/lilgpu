@@ -155,6 +155,7 @@ export class GpuWrapper<T extends Layout> {
         const pass = encoder.beginComputePass()
         pass.setPipeline(this.pipeline)
         pass.setBindGroup(0, this.root.unwrap(this.bindGroup))
+        pass.dispatchWorkgroups(x, y, z)
         pass.end()
 
         this.root.device.queue.submit([encoder.finish()])
