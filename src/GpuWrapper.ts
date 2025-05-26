@@ -150,6 +150,15 @@ export class GpuWrapper<T extends Layout> {
 
         this.root.device.queue.submit([commandEncoder.finish()])
     }
+    compute(x: number, y?: number, z?: number) {
+        const encoder = this.root.device.createCommandEncoder()
+        const pass = encoder.beginComputePass()
+        pass.setPipeline(this.pipeline)
+        pass.setBindGroup(0, this.root.unwrap(this.bindGroup))
+        pass.end()
+
+        this.root.device.queue.submit([encoder.finish()])
+    }
 }
 
 export async function initCanvas<T extends Layout>
