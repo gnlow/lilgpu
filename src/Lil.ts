@@ -15,8 +15,8 @@ const accessorDecorator =
     _Ctx extends ClassAccessorDecoratorContext<This, Return>,
 >
 (f: (that: This) => (...args: Args) => {
-    getV(v: Return, ctx: _Ctx): Return,
-    setV(v: Return, ctx: _Ctx): Return,
+    getV?(v: Return, ctx: _Ctx): Return,
+    setV?(v: Return, ctx: _Ctx): Return,
     init?(v: Return, ctx: _Ctx): void,
 }) =>
 (...args: Args) => function (
@@ -26,10 +26,10 @@ const accessorDecorator =
 ) {
     return {
         get(this: This) {
-            return f(this)(...args).getV(get.call(this), ctx)
+            return (f(this)(...args).getV || (v => v))(get.call(this), ctx)
         },
         set(this: This, newValue: Return) {
-            set.call(this, f(this)(...args).setV(newValue, ctx))
+            set.call(this,(f(this)(...args).setV || (v => v))(newValue, ctx))
         },
         init(this: This, value: Return) {
             f(this)(...args).init?.(value, ctx)
@@ -40,15 +40,11 @@ const accessorDecorator =
 
 const layoutDecorator = 
 <Args extends any[], T extends AnyWgslData, This extends Lil>
-(
-    f: (...args: Args) => TgpuLayoutEntry,
-    get: (v: Infer<T>, lil: This) => Infer<T> = v => v,
-) =>
+(f: (...args: Args) => TgpuLayoutEntry) =>
 accessorDecorator(
     (lil: This) =>
     (...args: Args) => ({
-        getV: (v: Infer<T>) => get(v, lil),
-        setV: (v, { name }) => {
+        setV: (v: Infer<T>, { name }) => {
             lil.update(
                 name as any,
                 v as any,
@@ -56,7 +52,7 @@ accessorDecorator(
             return v
         },
         init: (_, { name }) => {
-            (lil.layout[name as any] as any) = f(...args)
+            lil.layout[name] = f(...args)
         },
     })
 )
@@ -72,8 +68,7 @@ export const storage =
 <T extends AnyWgslData, This extends Lil>
 (type: T, access: TgpuLayoutStorage["access"]) =>
 layoutDecorator<[T, typeof access], T, This>(
-    (type, access) => ({ storage: type, access }),
-    (v, lil) => v
+    (type, access) => ({ storage: type, access })
 )(type, access)
 
 export const vertex =
