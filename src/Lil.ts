@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-explicit-any
 import {
     AnyWgslData,
     Infer,
@@ -39,20 +40,23 @@ const accessorDecorator =
 
 const layoutDecorator = 
 <Args extends any[], T extends AnyWgslData, This extends Lil>
-(f: (...args: Args) => TgpuLayoutEntry) =>
+(
+    f: (...args: Args) => TgpuLayoutEntry,
+    get: (v: Infer<T>, lil: This) => Infer<T> = v => v,
+) =>
 accessorDecorator(
     (lil: This) =>
     (...args: Args) => ({
-        getV: (v: Infer<T>) => v,
+        getV: (v: Infer<T>) => get(v, lil),
         setV: (v, { name }) => {
             lil.update(
-                name as This["__t_keys"],
-                v as This[This["__t_keys"]],
+                name as any,
+                v as any,
             )
             return v
         },
         init: (_, { name }) => {
-            lil.layout[name as This["__t_keys"]] = f(...args)
+            (lil.layout[name as any] as any) = f(...args)
         },
     })
 )
@@ -68,7 +72,8 @@ export const storage =
 <T extends AnyWgslData, This extends Lil>
 (type: T, access: TgpuLayoutStorage["access"]) =>
 layoutDecorator<[T, typeof access], T, This>(
-    (type, access) => ({ storage: type, access })
+    (type, access) => ({ storage: type, access }),
+    (v, lil) => v
 )(type, access)
 
 export const vertex =
@@ -105,36 +110,41 @@ const keys =
 <T extends object>(obj: T) =>
     Object.keys(obj) as (keyof T)[]
 
-export abstract class Lil {
+type Layout_ = Record<string, TgpuLayoutEntry>
+
+type InferRecord
+<Layout extends Layout_> = {
+    [K in keyof Layout]: Infer<Layout[K]>
+}
+
+export abstract class Lil
+<Layout extends Layout_ = any> {
     vertShader?: string
     fragShader?: string
     compShader?: string
-    /**
-     * Type variable
-     */
-    __t_keys = "" as keyof Omit<this, keyof Lil>
 
-    layout = {} as Record<this["__t_keys"], TgpuLayoutEntry>
+    layout = {} as Layout
 
     updateListeners: (
-        <K extends this["__t_keys"]>
-        (name: K, value: this[K]) => void
+        <K extends keyof Layout>
+        (name: K, value: Infer<Layout[K]>) => void
     )[] = []
     onUpdate(f: typeof this.updateListeners[0]) {
         this.updateListeners.push(f)
     }
 
-    update(name: this["__t_keys"], value: this[typeof name]) {
+    update<K extends keyof Layout>
+    (name: K, value: Infer<Layout[K]>) {
         this.updateListeners.forEach(f => f(name, value))
     }
 
-    initWrapper(wrapper: GpuWrapper<this["layout"]>) {
+    initWrapper(wrapper: GpuWrapper<Layout>) {
         this.onUpdate((name, value) => {
-            wrapper.buffers[name].write(value)
+            (wrapper.buffers[name] as any).write(value)
         })
         keys(this.layout).forEach(name => {
-            const value = this[name]
-            wrapper.buffers[name].write(value)
+            const value = (this as InferRecord<Layout>)[name]
+            ;(wrapper.buffers[name].write as any)(value)
         })
     }
 }
