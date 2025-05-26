@@ -13,8 +13,14 @@ import {
 export interface GpuWrapperInfo<T extends Layout> {
     getTexture(): GPUTexture,
     format?: GPUTextureFormat,
-    vertShader: string,
-    fragShader: string,
+    vertShader?: string,
+    fragShader?: string,
+    layout?: T,
+}
+export interface GpuWrapperInfo<T extends Layout> {
+    getTexture(): GPUTexture,
+    format?: GPUTextureFormat,
+    compShader?: string,
     layout?: T,
 }
 
@@ -33,6 +39,7 @@ export class GpuWrapper<T extends Layout> {
             format,
             vertShader,
             fragShader,
+            compShader,
             layout,
         }: GpuWrapperInfo<T>,
     ) {
@@ -68,36 +75,55 @@ export class GpuWrapper<T extends Layout> {
             bgLayout,
             this.buffers as any,
         )
-
-        this.pipeline = device.createRenderPipeline({
-            layout: device.createPipelineLayout({
-                bindGroupLayouts: [root.unwrap(bgLayout)]
-            }),
-            vertex: {
-                module: device.createShaderModule({
-                    code: tgpu.resolve({
-                        template: vertShader,
-                        externals: {
-                            ...bgLayout.bound,
-                        },
-                    }),
+        if (vertShader && fragShader) {
+            this.pipeline = device.createRenderPipeline({
+                layout: device.createPipelineLayout({
+                    bindGroupLayouts: [root.unwrap(bgLayout)]
                 }),
-            },
-            fragment: {
-                module: device.createShaderModule({
-                    code: tgpu.resolve({
-                        template: fragShader,
-                        externals: {
-                            ...bgLayout.bound,
-                        },
+                vertex: {
+                    module: device.createShaderModule({
+                        code: tgpu.resolve({
+                            template: vertShader,
+                            externals: {
+                                ...bgLayout.bound,
+                            },
+                        }),
                     }),
+                },
+                fragment: {
+                    module: device.createShaderModule({
+                        code: tgpu.resolve({
+                            template: fragShader,
+                            externals: {
+                                ...bgLayout.bound,
+                            },
+                        }),
+                    }),
+                    targets: [{ format: this.format }],
+                },
+                primitive: {
+                    topology: "triangle-strip",
+                },
+            })
+        } else if (compShader) {
+            this.pipeline = device.createComputePipeline({
+                layout: device.createPipelineLayout({
+                    bindGroupLayouts: [root.unwrap(bgLayout)]
                 }),
-                targets: [{ format: this.format }],
-            },
-            primitive: {
-                topology: "triangle-strip",
-            }
-        })
+                compute: {
+                    module: device.createShaderModule({
+                        code: tgpu.resolve({
+                            template: compShader,
+                            externals: {
+                                ...bgLayout.bound,
+                            },
+                        })
+                    })
+                },
+            })
+        } else {
+            throw new Error("Need shader")
+        }
     }
     beforeDrawFinish(_commandEncoder: GPUCommandEncoder) {}
     draw(...params: Parameters<GPURenderPassEncoder["draw"]>) {

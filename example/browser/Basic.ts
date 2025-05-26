@@ -36,11 +36,17 @@ fn main(
     return vec4(red, green, blue, 1.0);
 }
 `
-import { d, Lil, uniform } from "../../browser.ts"
+import {
+    d,
+    Lil,
+    uniform,
+    vertex,
+    fragment,
+} from "../../browser.ts"
 
 class Basic extends Lil {
-    vertShader = vertShader
-    fragShader = fragShader
+    @vertex v = vertShader
+    @fragment f = fragShader
 
     @uniform(d.struct({
         x: d.u32,

@@ -71,14 +71,44 @@ layoutDecorator<[T, typeof access], T, This>(
     (type, access) => ({ storage: type, access })
 )(type, access)
 
+export const vertex =
+<This extends Lil>
+(
+    _: undefined,
+    _ctx: ClassFieldDecoratorContext<This, string>,
+) =>
+function (this: This, value: string) {
+    return this.vertShader = value
+}
+
+export const fragment =
+<This extends Lil>
+(
+    _: undefined,
+    _ctx: ClassFieldDecoratorContext<This, string>,
+) =>
+function (this: This, value: string) {
+    return this.fragShader = value
+}
+
+export const compute =
+<This extends Lil>
+(
+    _: undefined,
+    _ctx: ClassFieldDecoratorContext<This, string>,
+) =>
+function (this: This, value: string) {
+    return this.compShader = value
+}
+
 const keys =
 <T extends object>(obj: T) =>
     Object.keys(obj) as (keyof T)[]
 
 export abstract class Lil {
-    abstract vertShader: string
-    abstract fragShader: string
-
+    vertShader?: string
+    fragShader?: string
+    compShader?: string
     /**
      * Type variable
      */
