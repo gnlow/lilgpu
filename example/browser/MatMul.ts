@@ -71,7 +71,7 @@ class MatrixMul extends Lil {
 }
 
 const matrixMul = new MatrixMul()
-const g = await matrixMul.init(document.querySelector("canvas")!)
+const g = await matrixMul.init()
 
 g.compute(
     Math.ceil(matrixMul.firstMatrix.size.x / WORKGROUP_SIZE[0]),

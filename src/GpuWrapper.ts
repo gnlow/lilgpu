@@ -12,14 +12,14 @@ import {
 } from "./types.ts"
 
 export interface GpuWrapperInfo<T extends Layout> {
-    getTexture(): GPUTexture,
+    getTexture?(): GPUTexture,
     format?: GPUTextureFormat,
     vertShader?: string,
     fragShader?: string,
     layout?: T,
 }
 export interface GpuWrapperInfo<T extends Layout> {
-    getTexture(): GPUTexture,
+    getTexture?(): GPUTexture,
     format?: GPUTextureFormat,
     compShader?: string,
     layout?: T,
@@ -128,6 +128,9 @@ export class GpuWrapper<T extends Layout> {
     }
     beforeDrawFinish(_commandEncoder: GPUCommandEncoder) {}
     draw(...params: Parameters<GPURenderPassEncoder["draw"]>) {
+        if (!this.getTexture) {
+            throw new Error("No texture provided")
+        }
         const textureView = this.getTexture().createView()
         const renderPassDescriptor: GPURenderPassDescriptor = {
             colorAttachments: [
@@ -164,8 +167,15 @@ export class GpuWrapper<T extends Layout> {
 }
 
 export async function initCanvas<T extends Layout>
-(info: Omit<GpuWrapperInfo<T>, "getTexture"> & { canvas: HTMLCanvasElement }) {
+(info: Omit<GpuWrapperInfo<T>, "getTexture"> & { canvas?: HTMLCanvasElement }) {
     const root = await tgpu.init()
+
+    if (!info.canvas) {
+        return new GpuWrapper(
+            root,
+            info,
+        )
+    }
     const ctx = info.canvas.getContext("webgpu") as unknown as GPUCanvasContext
 
     ctx.configure({
