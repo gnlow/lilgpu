@@ -6,7 +6,7 @@ import { Lil as Lil_ } from "./src/Lil.ts"
 import { initDeno } from "./src/DenoGpuWrapper.ts"
 
 export abstract class Lil extends Lil_ {
-    async init(width: number, height: number) {
+    async init(width?: number, height?: number) {
         const wrapper = await initDeno<this["layout"]>({
             ...this,
             width,

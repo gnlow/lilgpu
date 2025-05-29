@@ -17,7 +17,7 @@ export class DenoGpuWrapper<T extends Layout> extends GpuWrapper<T> {
     constructor(
         root: TgpuRoot,
         info: GpuWrapperInfo<T> & { width?: number, height?: number },
-        outputBuffer: GPUBuffer,
+        outputBuffer?: GPUBuffer,
     ) {
         super(root, info)
         this.outputBuffer = outputBuffer
@@ -28,7 +28,7 @@ export class DenoGpuWrapper<T extends Layout> extends GpuWrapper<T> {
     }
 
     override beforeDrawFinish(commandEncoder: GPUCommandEncoder) {
-        if (!this.getTexture || !this.dimension) {
+        if (!this.getTexture || !this.dimension || !this.outputBuffer) {
             throw new Error("No texture provided")
         }
         copyToBuffer(
@@ -39,7 +39,7 @@ export class DenoGpuWrapper<T extends Layout> extends GpuWrapper<T> {
         )
     }
     async getImage() {
-        if (!this.dimension) {
+        if (!this.dimension || !this.outputBuffer) {
             throw new Error("No texture provided")
         }
         return await createPng(
@@ -50,8 +50,16 @@ export class DenoGpuWrapper<T extends Layout> extends GpuWrapper<T> {
 }
 
 export async function initDeno<T extends Layout>
-(info: Omit<GpuWrapperInfo<T>, "getTexture"> & { width: number, height: number }) {
+(info: Omit<GpuWrapperInfo<T>, "getTexture"> & { width?: number, height?: number }) {
     const root = await tgpu.init()
+
+    if (!info.width || !info.height) {
+        return new DenoGpuWrapper(
+            root,
+            info,
+        )
+    }
+
     const { texture, outputBuffer } = createCapture(
         root.device,
         info.width,
