@@ -5,7 +5,7 @@ import {
     TgpuLayoutEntry,
     TgpuLayoutStorage,
 } from "./deps.ts"
-import { GpuWrapper } from "./GpuWrapper.ts"
+import { GpuWrapper, GpuWrapperInfo } from "./GpuWrapper.ts"
 
 const accessorDecorator =
 <
@@ -113,12 +113,14 @@ type InferRecord
 }
 
 export abstract class Lil
-<Layout extends Layout_ = any> {
+<Layout extends Layout_ = any>
+implements GpuWrapperInfo<Layout> {
     vertShader?: string
     fragShader?: string
     compShader?: string
 
     layout = {} as Layout
+    topology?: GPUPrimitiveTopology
 
     updateListeners: (
         <K extends keyof Layout>
