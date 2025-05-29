@@ -29,7 +29,8 @@ export class GpuWrapper<T extends Layout> {
     root
     getTexture
     format
-    pipeline
+    renderPipeline
+    computePipeline
     bindGroup
     buffers
 
@@ -77,7 +78,7 @@ export class GpuWrapper<T extends Layout> {
             this.buffers as any,
         )
         if (vertShader && fragShader) {
-            this.pipeline = device.createRenderPipeline({
+            this.renderPipeline = device.createRenderPipeline({
                 layout: device.createPipelineLayout({
                     bindGroupLayouts: [root.unwrap(bgLayout)]
                 }),
@@ -106,8 +107,9 @@ export class GpuWrapper<T extends Layout> {
                     topology: "triangle-strip",
                 },
             })
-        } else if (compShader) {
-            this.pipeline = device.createComputePipeline({
+        }
+        if (compShader) {
+            this.computePipeline = device.createComputePipeline({
                 layout: device.createPipelineLayout({
                     bindGroupLayouts: [root.unwrap(bgLayout)]
                 }),
@@ -122,14 +124,15 @@ export class GpuWrapper<T extends Layout> {
                     })
                 },
             })
-        } else {
-            throw new Error("Need shader")
         }
     }
     beforeDrawFinish(_commandEncoder: GPUCommandEncoder) {}
     draw(...params: Parameters<GPURenderPassEncoder["draw"]>) {
         if (!this.getTexture) {
             throw new Error("No texture provided")
+        }
+        if (!this.renderPipeline) {
+            throw new Error("No renderPipeline")
         }
         const textureView = this.getTexture().createView()
         const renderPassDescriptor: GPURenderPassDescriptor = {
@@ -145,7 +148,7 @@ export class GpuWrapper<T extends Layout> {
 
         const commandEncoder = this.root.device.createCommandEncoder()
         const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor)
-        passEncoder.setPipeline(this.pipeline)
+        passEncoder.setPipeline(this.renderPipeline)
         passEncoder.setBindGroup(0, this.root.unwrap(this.bindGroup))
         passEncoder.draw(...params)
         passEncoder.end()
@@ -155,9 +158,12 @@ export class GpuWrapper<T extends Layout> {
         this.root.device.queue.submit([commandEncoder.finish()])
     }
     compute(x: number, y?: number, z?: number) {
+        if (!this.computePipeline) {
+            throw new Error("No computePipeline")
+        }
         const encoder = this.root.device.createCommandEncoder()
         const pass = encoder.beginComputePass()
-        pass.setPipeline(this.pipeline)
+        pass.setPipeline(this.computePipeline)
         pass.setBindGroup(0, this.root.unwrap(this.bindGroup))
         pass.dispatchWorkgroups(x, y, z)
         pass.end()
