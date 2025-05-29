@@ -71,6 +71,17 @@ layoutDecorator<[T, typeof access], T, This>(
     (type, access) => ({ storage: type, access })
 )(type, access)
 
+export const topology =
+<This extends Lil>
+(topology: GPUPrimitiveTopology) =>
+(
+    _: undefined,
+    _ctx: ClassFieldDecoratorContext<This>,
+) =>
+function (this: This) {
+    return this.topology = topology
+}
+
 export const vertex =
 <This extends Lil>
 (
