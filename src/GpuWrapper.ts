@@ -16,13 +16,9 @@ export interface GpuWrapperInfo<T extends Layout> {
     format?: GPUTextureFormat,
     vertShader?: string,
     fragShader?: string,
-    layout?: T,
-}
-export interface GpuWrapperInfo<T extends Layout> {
-    getTexture?(): GPUTexture,
-    format?: GPUTextureFormat,
     compShader?: string,
     layout?: T,
+    topology?: GPUPrimitiveTopology,
 }
 
 export class GpuWrapper<T extends Layout> {
@@ -43,6 +39,7 @@ export class GpuWrapper<T extends Layout> {
             fragShader,
             compShader,
             layout,
+            topology,
         }: GpuWrapperInfo<T>,
     ) {
         this.root = root
@@ -104,7 +101,7 @@ export class GpuWrapper<T extends Layout> {
                     targets: [{ format: this.format }],
                 },
                 primitive: {
-                    topology: "triangle-strip",
+                    topology: topology || "triangle-strip",
                 },
             })
         }
