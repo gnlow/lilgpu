@@ -27,7 +27,8 @@ export class GpuWrapper<T extends Layout> {
     format
     renderPipeline
     computePipeline
-    bindGroup
+    renderBG
+    computeBG
     buffers
 
     constructor(
@@ -68,23 +69,52 @@ export class GpuWrapper<T extends Layout> {
                             .$usage("storage")
                 }
             })
+        
+        const objMap =
+        <K extends string, V>
+        (obj: Record<K, V>, f: (k: K, v: V) => V) =>
+            Object.fromEntries(
+                Object.entries(obj)
+                    .map(([k, v]) => [k, f(k as K, v as V)])
+            ) as Record<K, V>
 
-        const bgLayout = tgpu.bindGroupLayout<T>(layout || {} as T)
-        this.bindGroup = root.createBindGroup(
-            bgLayout,
+        const renderLayout =
+        objMap(layout || {}, (_k, v) => {
+            return {
+                ...v,
+                access: "readonly",
+            } as typeof v
+        }) as T
+        const renderBGLayout = tgpu.bindGroupLayout<T>(renderLayout)
+        this.renderBG = root.createBindGroup(
+            renderBGLayout,
             this.buffers as any,
         )
+
+        const computeLayout =
+        objMap(layout || {}, (_k, v) => {
+            return {
+                ...v,
+                access: "mutable",
+            } as typeof v
+        }) as T
+        const computeBGLayout = tgpu.bindGroupLayout<T>(computeLayout)
+        this.computeBG = root.createBindGroup(
+            computeBGLayout,
+            this.buffers as any,
+        )
+
         if (vertShader && fragShader) {
             this.renderPipeline = device.createRenderPipeline({
                 layout: device.createPipelineLayout({
-                    bindGroupLayouts: [root.unwrap(bgLayout)]
+                    bindGroupLayouts: [root.unwrap(renderBGLayout)]
                 }),
                 vertex: {
                     module: device.createShaderModule({
                         code: tgpu.resolve({
                             template: vertShader,
                             externals: {
-                                ...bgLayout.bound,
+                                ...renderBGLayout.bound,
                             },
                         }),
                     }),
@@ -94,7 +124,7 @@ export class GpuWrapper<T extends Layout> {
                         code: tgpu.resolve({
                             template: fragShader,
                             externals: {
-                                ...bgLayout.bound,
+                                ...renderBGLayout.bound,
                             },
                         }),
                     }),
@@ -108,14 +138,14 @@ export class GpuWrapper<T extends Layout> {
         if (compShader) {
             this.computePipeline = device.createComputePipeline({
                 layout: device.createPipelineLayout({
-                    bindGroupLayouts: [root.unwrap(bgLayout)]
+                    bindGroupLayouts: [root.unwrap(computeBGLayout)]
                 }),
                 compute: {
                     module: device.createShaderModule({
                         code: tgpu.resolve({
                             template: compShader,
                             externals: {
-                                ...bgLayout.bound,
+                                ...computeBGLayout.bound,
                             },
                         })
                     })
@@ -146,7 +176,7 @@ export class GpuWrapper<T extends Layout> {
         const commandEncoder = this.root.device.createCommandEncoder()
         const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor)
         passEncoder.setPipeline(this.renderPipeline)
-        passEncoder.setBindGroup(0, this.root.unwrap(this.bindGroup))
+        passEncoder.setBindGroup(0, this.root.unwrap(this.renderBG))
         passEncoder.draw(...params)
         passEncoder.end()
 
@@ -161,7 +191,7 @@ export class GpuWrapper<T extends Layout> {
         const encoder = this.root.device.createCommandEncoder()
         const pass = encoder.beginComputePass()
         pass.setPipeline(this.computePipeline)
-        pass.setBindGroup(0, this.root.unwrap(this.bindGroup))
+        pass.setBindGroup(0, this.root.unwrap(this.computeBG))
         pass.dispatchWorkgroups(x, y, z)
         pass.end()
 
