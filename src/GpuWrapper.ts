@@ -55,6 +55,8 @@ export class GpuWrapper<T extends Layout> {
         }
         Object.entries(layout || {})
             .forEach(([k, v]) => {
+                if (!v) { return }
+                v.visibility = ["compute", "fragment", "vertex"]
                 if ("uniform" in v!) {
                     (this.buffers[k] as unknown) =
                         root.createBuffer(v.uniform)
